@@ -16,7 +16,7 @@ JSON.
 It is meant to be used in conjunction with the ``sphinxcontrib.httpdomain``
 extension to document APIs and provide a way to play with them.
 
-  .. image:: http://raw.github.com/amol-/sphinxcontrib.jsoncall/master/example.png
+  .. image:: https://raw.github.com/amol-/sphinxcontrib.jsoncall/master/example.png
 
 CORS
 --------
