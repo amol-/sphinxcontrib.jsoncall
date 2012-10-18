@@ -29,7 +29,7 @@ Usage
 
 First you must add the extension to your list of extensions in conf.py::
 
-  extensions = ['sphinx.ext.autodoc', 'sphinxcontrib.jsoncall']
+  extensions = ['sphinxcontrib.httpdomain', 'sphinxcontrib.jsoncall']
 
 Now simply providing the base url for your api calls is enough
 to start using the jsoncall directive::
