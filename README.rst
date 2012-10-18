@@ -2,8 +2,6 @@
 JSON Call
 =========================
 
-:author: Alessandro Molina <alessandro.molina@axant.it>
-
 About
 =======
 
