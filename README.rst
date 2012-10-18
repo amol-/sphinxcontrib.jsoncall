@@ -41,7 +41,7 @@ Directives
 
 This module defines a directive, `jsoncall` this directive takes
 a single required argument which is the url of the API relative
-to the `jsoncall_baseurl`::
+to the ``jsoncall_baseurl``::
 
   .. jsoncall:: /publicapitest
 
@@ -63,4 +63,4 @@ STYLING
 ============
 
 The extension provides a default CSS file which can be disabled
-using the `jsoncall_inject_css` option.
+using the ``jsoncall_inject_css`` option.
