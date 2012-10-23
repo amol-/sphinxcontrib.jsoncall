@@ -61,6 +61,16 @@ be possible to test it with::
 This will also add an **id** input field which makes possible
 to modify the id value to try with different api calls.
 
+It is possible to manually insert a response in the response field, just write
+it under the input fields::
+
+  .. jsoncall:: /movies/retrieve
+
+        {"id": "505c6a9d93681621aa0000fe"}
+
+        {"title": "The Hitchhiker's Guide to the Galaxy"}
+
+
 STYLING
 ============
 
