@@ -3,9 +3,17 @@ from urlparse import urljoin
 from docutils import nodes
 from docutils.parsers.rst import directives
 from docutils.parsers.rst import Directive
+from itertools import chain, takewhile
 
 JSONCALL_JS = """
 <script>
+function indented_fill_%(callid)s_result(data) {
+    if (typeof data !== "string")
+        data = JSON.stringify(data, undefined, 2);
+    var dest = jQuery("#jsoncall_%(callid)s_result");
+    dest.html(jsoncall_syntax_highlight(data));
+}
+
 function perform_%(callid)s_call() {
     var params = {};
     jQuery("#jsoncall_%(callid)s_params input").each(function(i, e) {
@@ -15,9 +23,7 @@ function perform_%(callid)s_call() {
     jQuery.get("%(url)s",
                params,
                function(data, textStatus, jqXHR) {
-                   var text_data = JSON.stringify(data, undefined, 2);
-                   var dest = jQuery("#jsoncall_%(callid)s_result"); 
-                   dest.html(jsoncall_syntax_highlight(text_data));
+                   indented_fill_%(callid)s_result(data);
                },
                "json"
     );
@@ -26,11 +32,12 @@ function perform_%(callid)s_call() {
 """
 
 class jsoncall(nodes.Element):
-    def __init__(self, url, params, callid):
+    def __init__(self, url, params, callid, static_response):
         super(jsoncall, self).__init__()
         self.url = url
         self.params = params
         self.callid = callid
+        self.static_response = static_response
 
 def visit_jsoncall_html(self, node):
     self.body.append(JSONCALL_JS % dict(callid=node.callid, url=node.url))
@@ -45,7 +52,12 @@ def depart_jsoncall_html(self, node):
     self.body.append('</table>')
 
     self.body.append('<div class="jsoncall_button" onclick="perform_%s_call()">Test Call</div>' % node.callid)   
-    self.body.append('<pre class="jsoncall_result" id="jsoncall_%s_result"></pre>' % node.callid)
+    self.body.append('<pre class="jsoncall_result" id="jsoncall_%s_result">%s</pre>' % (node.callid, node.static_response))
+    self.body.append("""
+<script>
+    var res = jQuery("#jsoncall_%(callid)s_result");
+    res.html(indented_fill_%(callid)s_result(res.text()));
+</script>""" % {'callid': node.callid})
 
 class JSONCall(Directive):
     required_arguments = 1
@@ -58,10 +70,11 @@ class JSONCall(Directive):
         baseurl = env.config.jsoncall_baseurl
         url = self.arguments[0]
         apiurl = urljoin( env.config.jsoncall_baseurl, url)
-
+        iter_content = chain(self.content)
+        content = '\n'.join(list(takewhile(lambda x: x.strip(), iter_content)))
+        static_response = '\n'.join(list(iter_content))
         callid = env.new_serialno('jsoncall')
-        content = '\n'.join(self.content)
-        return [jsoncall(url=apiurl, params=json.loads(content), callid=callid)]
+        return [jsoncall(url=apiurl, params=json.loads(content), callid=callid, static_response=static_response)]
 
 def on_init(app):
     dirpath = os.path.dirname(__file__)
