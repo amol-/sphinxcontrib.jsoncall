@@ -76,3 +76,36 @@ STYLING
 
 The extension provides a default CSS file which can be disabled
 using the ``jsoncall_inject_css`` option.
+
+
+==================
+TGJSonAutodoc
+==================
+
+This module provides a `tgjsonautodoc` directive inside the ``sphinxcontrib.tgjsonautodoc``
+which given a TurboGears2 application automatically inspects it looking for
+controllers that ``@expose`` a json template and documents their path,
+their arguments and validators. The docstring of the method is treated
+as the *sphinx* paragraph for that specific method.
+
+By default if no ``.. jsoncall::`` directive is found inside the
+docstring one is automatically generated.
+
+Using TGJsonAutodoc
+=====================
+
+To start using tgjsonautoc directive simply add to your ``conf.py`` the
+following extensions::
+
+    extensions = ['sphinxcontrib.httpdomain', 'sphinxcontrib.jsoncall', 'sphinxcontrib.tgjsonautodoc']
+
+then you must specify the PasteDeploy compatible configuration file
+from where your application has to be loaded::
+
+    tgjsonautodoc_app = '/home/amol/wrk/byzantine/development.ini'
+
+then where you want to generate the documentation for all the found 
+methods::
+
+  .. tgjsonautodoc:: 
+      
