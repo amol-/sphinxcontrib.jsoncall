@@ -102,7 +102,7 @@ following extensions::
 then you must specify the PasteDeploy compatible configuration file
 from where your application has to be loaded::
 
-    tgjsonautodoc_app = '/home/amol/wrk/byzantine/development.ini'
+    tgjsonautodoc_app = '/home/myuser/myproject/development.ini'
 
 then where you want to generate the documentation for all the found 
 methods::
