@@ -72,9 +72,14 @@ class TGJSONAutodoc(Directive):
                     if 'json' in registered_engines:
                         path = ci_instance.mount_point + '/' + value.__name__
 
+                        should_skip = False
                         for skip_url in self.options.get('skip-urls', '').split(','):
+                            skip_url = skip_url.strip()
                             if path.startswith(skip_url):
-                                continue
+                                should_skip = True
+
+                        if should_skip:
+                            continue
 
                         argspec = inspect.getargspec(value)
                         argspec = (argspec[0][1:], argspec[3] or [])
