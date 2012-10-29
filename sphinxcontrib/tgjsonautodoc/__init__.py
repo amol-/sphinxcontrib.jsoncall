@@ -1,7 +1,7 @@
 import sys, json, os, inspect, operator
 from docutils import nodes
 from docutils.statemachine import ViewList
-from docutils.parsers.rst import Directive
+from docutils.parsers.rst import Directive, directives
 
 from sphinx.util.nodes import nested_parse_with_titles
 
@@ -43,6 +43,7 @@ class TGJSONAutodoc(Directive):
     required_arguments = 0
     optional_arguments = 0
     has_content = False
+    option_spec = {'skip-urls': directives.unchanged}
 
     def _retrieve_root(self):
         env = self.state.document.settings.env
@@ -70,6 +71,10 @@ class TGJSONAutodoc(Directive):
                     registered_engines = map(operator.itemgetter(0), value.decoration.engines.values())
                     if 'json' in registered_engines:
                         path = ci_instance.mount_point + '/' + value.__name__
+
+                        for skip_url in self.options.get('skip-urls', '').split(','):
+                            if path.startswith(skip_url):
+                                continue
 
                         argspec = inspect.getargspec(value)
                         argspec = (argspec[0][1:], argspec[3] or [])
@@ -105,8 +110,8 @@ class TGJSONAutodoc(Directive):
             if info['validation']:
                 doc += VALIDATION_TEMPLATE
                 for field, validator in info['validation'].validators.items():
-                    doc += '|%s|%s|\n' % (('**%s**' % field).ljust(27), ('`%s`' % validator.__name__).ljust(27))
-                    doc += '+---------------------------+---------------------------+'
+                    doc += '|%s|%s|\n' % (('**%s**' % field).ljust(27), ('`%s`' % validator.__class__.__name__).ljust(27))
+                    doc += '+---------------------------+---------------------------+\n'
 
             if 'jsoncall' not in doc:
                 info['argd_json'] = json.dumps(info['argd'])
