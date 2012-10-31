@@ -110,6 +110,11 @@ class TGJSONAutodoc(Directive):
 
     def _generate_doc(self, apis):
         for path, info in apis.iteritems():
+            jsoncall = None
+            if info['doc'] and '.. jsoncall' in info['doc']:
+                _doc, jsoncall = info['doc'].split('.. jsoncall::', 1)
+                info['doc'] = _doc
+
             doc = DOC_TEMPLATE % info
 
             if info['validation']:
@@ -118,9 +123,12 @@ class TGJSONAutodoc(Directive):
                     doc += '|%s|%s|\n' % (('**%s**' % field).ljust(27), ('`%s`' % validator.__class__.__name__).ljust(27))
                     doc += '+---------------------------+---------------------------+\n'
 
-            if 'jsoncall' not in doc:
+            if jsoncall is None:
                 info['argd_json'] = json.dumps(info['argd'])
                 doc += JSONCALL_TEMPLATE % info
+            else:
+                doc += '\n**Test Request**\n\n'
+                doc += '.. jsoncall::' + jsoncall
 
             info['doc'] = doc
 
