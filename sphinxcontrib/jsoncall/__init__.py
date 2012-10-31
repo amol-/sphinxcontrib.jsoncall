@@ -20,13 +20,22 @@ function perform_%(callid)s_call() {
        e = jQuery(e);
        params[e.attr("name")] = e.val();
     });
-    jQuery.get("%(url)s",
-               params,
-               function(data, textStatus, jqXHR) {
-                   indented_fill_%(callid)s_result(data);
-               },
-               "json"
-    );
+    jQuery.ajax({
+                "url":"%(url)s",
+                "type": "GET",
+                "data": params,
+                "dataType":"json",
+                'success':function(data, textStatus, jqXHR) {
+                       indented_fill_%(callid)s_result(data);
+                },
+                'error':function(jqXHR, textStatus, errorThrown) {
+                        var dest = jQuery("#jsoncall_%(callid)s_result");
+                        if (textStatus === "error")
+                            dest.text(jqXHR.statusText);
+                        else
+                            dest.text(textStatus);
+                }
+    });
 }
 </script>
 """
