@@ -4,6 +4,7 @@ from docutils import nodes
 from docutils.parsers.rst import directives
 from docutils.parsers.rst import Directive
 from itertools import chain, takewhile
+from ._escaping import escape
 
 JSONCALL_JS = """
 <script>
@@ -54,6 +55,7 @@ def visit_jsoncall_html(self, node):
 def depart_jsoncall_html(self, node):
     self.body.append('<table class="jsoncall_testform" id="jsoncall_%s_params">' % node.callid)
     for key, value in node.params.items():
+        value = escape(value)
         self.body.append('<tr>')
         self.body.append('<td>%s</td>' % key)
         self.body.append('<td><input style="min-width:200px;padding:5px;" type="text" name="%s" value="%s"/></td>' % (key, value))
