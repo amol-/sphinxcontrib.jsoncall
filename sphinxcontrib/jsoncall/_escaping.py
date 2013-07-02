@@ -15,5 +15,5 @@ def escape_entity(m, get=ENTITY_MAP.get):
     return string.join(map(get, m.group()), "")
 
 def escape(string):
-    return PATTERN.sub(escape_entity, string)
+    return PATTERN.sub(escape_entity, str(string))
 
