@@ -23,7 +23,7 @@ function perform_%(callid)s_call() {
     });
     jQuery.ajax({
                 "url":"%(url)s",
-                "type": "GET",
+                "type": "%(http_method)s",
                 "data": params,
                 "dataType":"json",
                 'success':function(data, textStatus, jqXHR) {
@@ -42,15 +42,16 @@ function perform_%(callid)s_call() {
 """
 
 class jsoncall(nodes.Element):
-    def __init__(self, url, params, callid, static_response):
+    def __init__(self, url, http_method, params, callid, static_response):
         super(jsoncall, self).__init__()
+        self.http_method = http_method
         self.url = url
         self.params = params
         self.callid = callid
         self.static_response = static_response
 
 def visit_jsoncall_html(self, node):
-    self.body.append(JSONCALL_JS % dict(callid=node.callid, url=node.url))
+    self.body.append(JSONCALL_JS % dict(callid=node.callid, url=node.url, http_method=node.http_method))
  
 def depart_jsoncall_html(self, node):
     self.body.append('<table class="jsoncall_testform" id="jsoncall_%s_params">' % node.callid)
@@ -74,10 +75,12 @@ class JSONCall(Directive):
     required_arguments = 1
     optional_arguments = 0
     has_content = True
+    option_spec = {'method': directives.unchanged}
 
     def run(self):
         env = self.state.document.settings.env
-
+        
+        http_method = self.options.get('method', 'GET')
         baseurl = env.config.jsoncall_baseurl
         url = self.arguments[0]
         apiurl = urljoin( env.config.jsoncall_baseurl, url)
@@ -85,7 +88,8 @@ class JSONCall(Directive):
         content = '\n'.join(list(takewhile(lambda x: x.strip(), iter_content)))
         static_response = '\n'.join(list(iter_content))
         callid = env.new_serialno('jsoncall')
-        return [jsoncall(url=apiurl, params=json.loads(content), callid=callid, static_response=static_response)]
+        return [jsoncall(url=apiurl, http_method=http_method, params=json.loads(content), 
+                         callid=callid, static_response=static_response)]
 
 def on_init(app):
     dirpath = os.path.dirname(__file__)

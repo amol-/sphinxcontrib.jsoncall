@@ -7,6 +7,7 @@ from sphinx.util.nodes import nested_parse_with_titles
 
 import tg
 from tg.controllers.decoratedcontroller import DecoratedController
+from tg import RestController
 
 from paste.deploy import loadapp
 
@@ -14,7 +15,7 @@ DOC_TEMPLATE = '''
 %(path)s
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-.. http:get:: %(path)s
+.. http:%(http_method)s:: %(path)s
 
     %(doc)s
 
@@ -70,7 +71,12 @@ class TGJSONAutodoc(Directive):
                 elif hasattr(value, 'decoration') and value.decoration.exposed:
                     registered_engines = map(operator.itemgetter(0), value.decoration.engines.values())
                     if 'json' in registered_engines:
-                        path = ci_instance.mount_point + '/' + value.__name__
+                        if isinstance(ci_instance, RestController):
+                            path = ci_instance.mount_point
+                            http_method = value.__name__.upper()
+                        else:
+                            path = ci_instance.mount_point + '/' + value.__name__
+                            http_method = 'GET'
 
                         should_skip = False
                         for skip_url in self.options.get('skip-urls', '').split(','):
@@ -98,10 +104,10 @@ class TGJSONAutodoc(Directive):
                             except IndexError:
                                 argd[arg] = ''
 
-                        json_methods[path] = {'args':argspec[0], 'argv':argspec[1],
-                                              'argd': argd,
-                                              'doc':value.__doc__, 'path':path,
-                                              'validation':value.decoration.validation}
+                        json_methods[path + http_method] = {'args':argspec[0], 'argv':argspec[1],
+                                                            'argd': argd, 'http_method': http_method,
+                                                            'doc':value.__doc__, 'path':path,
+                                                            'validation':value.decoration.validation}
 
         return json_methods
 
@@ -109,7 +115,8 @@ class TGJSONAutodoc(Directive):
         self.result.append(line, '<tgjsonautodoc>')
 
     def _generate_doc(self, apis):
-        for path, info in apis.iteritems():
+        for unique_path, info in apis.iteritems():
+            path = info['path']
             jsoncall = None
             if info['doc'] and '.. jsoncall' in info['doc']:
                 _doc, jsoncall = info['doc'].split('.. jsoncall::', 1)
