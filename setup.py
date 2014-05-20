@@ -19,7 +19,7 @@ except IOError:
 
 setup(
     name='sphinxcontrib-jsoncall',
-    version='0.2',
+    version='0.3',
     description='Sphinx extension that adds a simple button to perform test calls to JSON based apis',
     long_description=README,
     author='Alessandro Molina',
