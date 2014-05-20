@@ -8,8 +8,10 @@ from sphinx.util.nodes import nested_parse_with_titles
 import tg
 from tg.controllers.decoratedcontroller import DecoratedController
 from tg import RestController
+from tg.wsgiapp import TGApp
 
 from paste.deploy import loadapp
+
 
 DOC_TEMPLATE = '''
 %(path)s
@@ -51,10 +53,14 @@ class TGJSONAutodoc(Directive):
         tgapp = env.config.tgjsonautodoc_app
 
         app = loadapp('config:'+tgapp, name='main', relative_to=os.getcwd())
-        module = tg.config['application_root_module']
-        if module not in sys.modules:
-            __import__(module)
-        return sys.modules[module].RootController()
+        return TGApp().find_controller('root')()
+
+    def _filter_controllers(self, obj):
+        if isinstance(obj, DecoratedController):
+            return True
+        elif inspect.ismethod(obj) and hasattr(obj, 'decoration'):
+            return True
+        return False
 
     def _gather_controller_json_methods(self, root_controller):
         json_methods = {}
@@ -63,9 +69,9 @@ class TGJSONAutodoc(Directive):
             controller = controllers.pop()
 
             ci_instance = controller
-            controller = controller.__class__
+            controller_class = controller.__class__
 
-            for name, value in inspect.getmembers(controller):
+            for name, value in inspect.getmembers(controller_class, self._filter_controllers):
                 if isinstance(value, DecoratedController):
                     controllers.append(value)
                 elif hasattr(value, 'decoration') and value.decoration.exposed:
@@ -74,6 +80,10 @@ class TGJSONAutodoc(Directive):
                         if isinstance(ci_instance, RestController):
                             path = ci_instance.mount_point
                             http_method = value.__name__.upper()
+                            for normalized_method in ('GET', 'POST', 'PUT', 'DELETE'):
+                                if http_method.startswith(normalized_method):
+                                    http_method = normalized_method
+                                    break
                         else:
                             path = ci_instance.mount_point + '/' + value.__name__
                             http_method = 'GET'
@@ -81,7 +91,7 @@ class TGJSONAutodoc(Directive):
                         should_skip = False
                         for skip_url in self.options.get('skip-urls', '').split(','):
                             skip_url = skip_url.strip()
-                            if path.startswith(skip_url):
+                            if skip_url and path.startswith(skip_url):
                                 should_skip = True
 
                         if should_skip:
@@ -108,7 +118,6 @@ class TGJSONAutodoc(Directive):
                                                             'argd': argd, 'http_method': http_method,
                                                             'doc':value.__doc__, 'path':path,
                                                             'validation':value.decoration.validation}
-
         return json_methods
 
     def add_line(self, line):
